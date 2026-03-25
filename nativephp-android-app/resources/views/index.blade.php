@@ -45,8 +45,7 @@
     </style>
 </head>
 <body class="bg-[#020617] text-slate-200 h-full selection:bg-primary/30" 
-      x-data="bookApp()" 
-      x-init="init()"
+      x-data="bookApp(@js($books))" 
       :class="{ 'overflow-hidden': isModalOpen || isMenuOpen }">
 
     <!-- Navigation -->
@@ -62,12 +61,13 @@
 
         <!-- Desktop Search -->
         <div class="hidden md:flex flex-1 max-w-md mx-8 relative">
-            <input type="text" 
-                   x-model="searchQuery"
-                   @keyup.enter="search()"
-                   placeholder="Search millions of books..." 
-                   class="w-full bg-white/5 border border-white/10 rounded-2xl py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
-            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+            <form action="{{ route('home') }}" method="GET" class="w-full relative">
+                <input type="text" name="q" placeholder="Search millions of books..." value="{{ request('q') }}"
+                       class="w-full bg-white/5 border border-white/10 rounded-2xl py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-white">
+                <button type="submit" class="absolute left-4 top-1/2 -translate-y-1/2">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-500 hover:text-primary transition-colors"></i>
+                </button>
+            </form>
         </div>
 
         <div class="flex items-center gap-4">
@@ -82,68 +82,55 @@
         
         <!-- Mobile Search -->
         <div class="md:hidden relative mb-8">
-            <input type="text" 
-                   x-model="searchQuery"
-                   @keyup.enter="search()"
-                   placeholder="Titles, authors, keywords..." 
-                   class="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-14 pr-4 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
-            <i data-lucide="search" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"></i>
+            <form action="{{ route('home') }}" method="GET" class="relative w-full">
+                <input type="text" name="q" placeholder="Titles, authors, keywords..." value="{{ request('q') }}"
+                       class="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-14 pr-4 text-base focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-white">
+                <button type="submit" class="absolute left-5 top-1/2 -translate-y-1/2">
+                    <i data-lucide="search" class="w-5 h-5 text-slate-500 hover:text-primary transition-colors"></i>
+                </button>
+            </form>
         </div>
 
         <!-- Section Header -->
         <div class="flex items-end justify-between mb-8">
             <div>
-                <h2 class="text-2xl font-bold text-white mb-1" x-text="resultsTitle">Featured Books</h2>
+                <h2 class="text-2xl font-bold text-white mb-1">{{ $resultsTitle }}</h2>
                 <p class="text-slate-500 text-sm">Discover your next academic adventure</p>
-            </div>
-            <div x-show="loading" class="flex gap-1">
-                <div class="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"></div>
-                <div class="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                <div class="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]"></div>
             </div>
         </div>
 
         <!-- Books Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8">
-            <template x-for="(book, index) in books" :key="index">
+            @foreach($books as $index => $book)
                 <div class="group relative flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-4 duration-500"
-                     :style="`animation-delay: ${index * 50}ms`"
-                     @click="openInfo(book)">
+                     style="animation-delay: {{ $index * 50 }}ms"
+                     @click="openInfo(books[{{ $index }}])">
                     
-                    <div class="relative w-full aspect-[2/3] rounded-3xl overflow-hidden book-card-shadow transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-primary/20">
-                        <img :src="getCover(book)" 
+                    <div class="relative w-full aspect-[2/3] rounded-3xl overflow-hidden book-card-shadow transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-primary/20 cursor-pointer">
+                        <img src="{{ Str::replace('http:', 'https:', $book['volumeInfo']['imageLinks']['thumbnail'] ?? $book['volumeInfo']['imageLinks']['smallThumbnail'] ?? 'https://via.placeholder.com/300x450?text=No+Cover') }}" 
                              class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                             :alt="book.volumeInfo.title">
+                             alt="{{ $book['volumeInfo']['title'] ?? 'Unknown' }}">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                     </div>
 
                     <div class="mt-4 w-full px-2">
-                        <h3 class="font-semibold text-white text-sm line-clamp-1 group-hover:text-primary transition-colors" x-text="book.volumeInfo.title"></h3>
-                        <p class="text-slate-500 text-xs mt-1 truncate" x-text="getAuthor(book)"></p>
+                        <h3 class="font-semibold text-white text-sm line-clamp-1 group-hover:text-primary transition-colors cursor-pointer">{{ $book['volumeInfo']['title'] ?? 'Unknown Title' }}</h3>
+                        <p class="text-slate-500 text-xs mt-1 truncate">{{ implode(', ', $book['volumeInfo']['authors'] ?? ['Unknown Author']) }}</p>
                     </div>
                 </div>
-            </template>
-        </div>
-
-        <!-- Skeleton Loading -->
-        <div x-show="loading && books.length === 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
-            <template x-for="i in 10">
-                <div class="space-y-4 animate-pulse">
-                    <div class="bg-white/5 rounded-3xl aspect-[2/3] w-full"></div>
-                    <div class="h-3 bg-white/5 rounded-full w-3/4 mx-auto"></div>
-                    <div class="h-2 bg-white/5 rounded-full w-1/2 mx-auto"></div>
-                </div>
-            </template>
+            @endforeach
         </div>
 
         <!-- Empty State -->
-        <div x-show="!loading && books.length === 0" class="flex flex-col items-center justify-center py-20 text-center" x-cloak>
+        @if(empty($books))
+        <div class="flex flex-col items-center justify-center py-20 text-center">
             <div class="p-6 rounded-full bg-white/5 mb-6 border border-white/10">
                 <i data-lucide="search-x" class="w-12 h-12 text-slate-600"></i>
             </div>
             <h3 class="text-xl font-bold text-white">No books found</h3>
             <p class="text-slate-500 mt-2">Try a different search term or genre.</p>
         </div>
+        @endif
     </main>
 
     <!-- Modal Drawer -->
@@ -206,12 +193,12 @@
             </div>
             
             <nav class="space-y-6">
+                <!-- Using GET requests for navigation inside backend MVC -->
                 <template x-for="item in ['Programming', 'Design', 'Business', 'Philosophy', 'Science']">
-                    <button class="flex items-center gap-4 text-slate-400 hover:text-white transition-colors group w-full text-left"
-                            @click="search(item); isMenuOpen = false">
+                    <a :href="'/?q=' + item" class="flex items-center gap-4 text-slate-400 hover:text-white transition-colors group w-full text-left">
                         <span class="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors"></span>
                         <span class="text-lg font-medium" x-text="item"></span>
-                    </button>
+                    </a>
                 </template>
             </nav>
 
@@ -225,40 +212,14 @@
     </div>
 
     <script>
-        function bookApp() {
-            return {
-                searchQuery: '',
-                resultsTitle: 'Trending Now',
-                books: [],
-                loading: false,
+        document.addEventListener('alpine:init', () => {
+            lucide.createIcons();
+            
+            Alpine.data('bookApp', (serverBooks) => ({
+                books: serverBooks,
                 isModalOpen: false,
-                selectedBook: null,
                 isMenuOpen: false,
-
-                init() {
-                    lucide.createIcons();
-                    this.search('Software Engineering');
-                },
-
-                async search(query = null) {
-                    const q = query || this.searchQuery;
-                    if (!q) return;
-                    
-                    this.loading = true;
-                    this.resultsTitle = query ? `${query} Books` : `Search: ${q}`;
-                    
-                    try {
-                        const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=25`);
-                        const data = await res.json();
-                        this.books = data.items || [];
-                        this.$nextTick(() => lucide.createIcons());
-                    } catch (e) {
-                        console.error(e);
-                    } finally {
-                        this.loading = false;
-                        this.searchQuery = '';
-                    }
-                },
+                selectedBook: null,
 
                 getCover(book, zoom = 'M') {
                     if (!book?.volumeInfo?.imageLinks) return 'https://via.placeholder.com/300x450?text=No+Cover';
@@ -274,8 +235,8 @@
                     this.selectedBook = book;
                     this.isModalOpen = true;
                 }
-            }
-        }
+            }));
+        });
     </script>
 </body>
 </html>
