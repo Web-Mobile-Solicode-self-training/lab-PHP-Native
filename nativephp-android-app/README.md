@@ -56,3 +56,29 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Mobile App Project Plan
+
+This section documents the development lifecycle of the NativePHP Android application.
+
+### Phase 1: Core Foundation & UI Setup
+- [x] Initial Laravel project setup
+- [x] NativePHP Android bridge implementation (Current stage)
+- [x] Premium "BookFinder" UI skeleton (AlpineJS + Tailwind)
+
+### Phase 2: Dynamic Features & Integration
+- [x] **Hello World**: A clean, high-performance landing page for mobile users.
+- [x] **API Consumption**: Live data fetching using Laravel's Http client to demonstrate real-world utility.
+- [ ] **Native Hardware Access**: Integrating biometrics and camera (Planned next).
+
+### Phase 3: Visual Identity & Polishing
+- [x] **Custom Branding**: Replacing default icons with vibrant, premium assets.
+- [x] **Navigation Refactoring**: Enhanced sidebar menu for better mobile user experience.
+- [ ] **Offline Mode**: Database caching for intermittent connectivity.
+
+### Performance & Maintenance
+
+To clear the application cache during development, use the following commands:
+- **Laravel Cache**: `php artisan optimize:clear`
+- **NativePHP Build Artifacts**: Delete `storage/app/native-build`
+- **Android Gradle Cache**: Delete `nativephp/android/app/build`
